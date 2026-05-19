@@ -113,30 +113,32 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
     // Render Table using AutoTable
     autoTable(doc, {
       startY: 70,
-      head: [['Bill No.', 'Amount (Rs.)', 'Created Date', 'Due Date']],
+      head: [[
+        { content: 'Bill No.', styles: { halign: 'left' } },
+        { content: 'Amount (Rs.)', styles: { halign: 'right' } },
+        { content: 'Created Date', styles: { halign: 'left' } },
+        { content: 'Due Date', styles: { halign: 'left' } }
+      ]],
       body: tableRows,
       headStyles: {
         fillColor: primaryColor,
         textColor: [255, 255, 255],
         fontSize: 10,
         fontStyle: 'bold',
-        halign: 'left',
+        halign: 'left', // Default for other headers
       },
       bodyStyles: {
         fontSize: 9,
         textColor: textColor,
         halign: 'left',
       },
+      columnStyles: {
+        1: { halign: 'right' }, // Align the amount cells to the right
+      },
       alternateRowStyles: {
         fillColor: [249, 250, 251], // Gray-50
       },
       margin: { left: 14, right: 14 },
-      didParseCell: (data) => {
-        // Force right-alignment for both head and body cells of the Amount column (index 1)
-        if (data.column.index === 1) {
-          data.cell.styles.halign = 'right';
-        }
-      },
     });
 
     // Footer spacing & rendering
