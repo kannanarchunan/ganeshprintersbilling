@@ -64,7 +64,7 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-    doc.text(`Export Date: ${exportDateStr}`, 130, 46);
+    doc.text(`Created Date: ${exportDateStr}`, 130, 46);
     doc.setFont('helvetica', 'normal');
     doc.text(`Generated at: ${exportTimeStr}`, 130, 51);
 
