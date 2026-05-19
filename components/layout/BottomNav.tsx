@@ -12,21 +12,9 @@ export default function BottomNav() {
   const navItems = [
     {
       label: 'Places',
-      href: '/places',
+      href: '/',
       icon: MapPin,
-      activePattern: /^\/(places|$)/,
-    },
-    {
-      label: 'Pending',
-      href: '/bills/pending',
-      icon: Clock,
-      activePattern: /^\/bills\/pending/,
-    },
-    {
-      label: 'Completed',
-      href: '/bills/completed',
-      icon: CheckCircle2,
-      activePattern: /^\/bills\/completed/,
+      activePattern: /^\/($|places)/,
     },
     {
       label: 'Dashboard',
@@ -41,7 +29,7 @@ export default function BottomNav() {
       <div className="flex justify-around items-center h-12">
         {navItems.map((item) => {
           // Robust regex matching for subpages
-          const isActive = item.activePattern.test(pathname) || (item.href === '/places' && pathname === '/');
+          const isActive = item.activePattern.test(pathname);
           const Icon = item.icon;
 
           return (

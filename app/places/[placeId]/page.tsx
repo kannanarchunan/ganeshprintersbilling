@@ -78,7 +78,7 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
     try {
       await deletePlace(placeId);
       toast('Place and linked bills deleted successfully.', 'success');
-      router.replace('/places');
+      router.replace('/');
     } catch {
       toast('Failed to delete place. Please try again.', 'error');
     }
@@ -127,7 +127,7 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
           title={place.name}
           subtitle="Location Dashboard"
           showBack={true}
-          backHref="/places"
+          backHref="/"
           rightAction={
             <div className="flex gap-1">
               <button
