@@ -10,6 +10,15 @@ const getSheetsClient = () => {
   // Replace literal '\n' characters with actual newlines
   privateKey = privateKey.replace(/\\n/g, '\n');
 
+  // Trim surrounding double/single quotes and whitespace if present
+  privateKey = privateKey.trim();
+  if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
+    privateKey = privateKey.substring(1, privateKey.length - 1);
+  } else if (privateKey.startsWith("'") && privateKey.endsWith("'")) {
+    privateKey = privateKey.substring(1, privateKey.length - 1);
+  }
+  privateKey = privateKey.trim();
+
   if (!email || !privateKey) {
     throw new Error('Google Service Account credentials are not configured.');
   }
