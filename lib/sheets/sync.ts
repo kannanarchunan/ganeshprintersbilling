@@ -40,101 +40,98 @@ const runWithRetry = async <T>(fn: () => Promise<T>, retries = 1): Promise<T> =>
  * Perform non-blocking, real-time database sync to Google Sheets.
  */
 export const syncToSheets = async (event: SyncEvent): Promise<void> => {
-  // Execute async to ensure non-blocking server API responses
-  setTimeout(async () => {
-    try {
-      const sheetId = process.env.GOOGLE_SHEET_ID;
-      if (!sheetId) {
-        console.warn('GOOGLE_SHEET_ID environment variable is not defined. Skipping sync.');
-        return;
-      }
-
-      const sheets = getSheetsClient();
-
-      // Auto-ensure all required tabs exist with beautiful headers (now including Place Name)
-      await ensureSheetTabInitialized(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
-      await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
-      await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
-      await ensureSheetTabInitialized(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
-
-      // Fetch the human-readable Place Name for bill sync events
-      let placeName = '';
-      if (event.bill) {
-        try {
-          const { getSupabaseServer } = require('@/lib/supabase/server');
-          const supabase = getSupabaseServer();
-          const { data: place } = await supabase
-            .from('places')
-            .select('name')
-            .eq('id', event.bill.place_id)
-            .single();
-          if (place) {
-            placeName = place.name;
-          }
-        } catch (e) {
-          console.warn('Could not fetch place name for sheet sync:', e);
-        }
-      }
-
-      await runWithRetry(async () => {
-        // 1. Process place actions
-        if (event.type === 'place_created' && event.place) {
-          await appendRow(sheets, sheetId, 'Places', [
-            event.place.id,
-            event.place.name,
-            event.place.created_at,
-          ]);
-        } 
-        
-        else if (event.type === 'place_updated' && event.place) {
-          await updateRowInTab(sheets, sheetId, 'Places', event.place.id, [
-            event.place.id,
-            event.place.name,
-            event.place.created_at,
-          ]);
-        } 
-        
-        else if (event.type === 'place_deleted' && event.place) {
-          await deleteRowInTab(sheets, sheetId, 'Places', event.place.id);
-        }
-
-        // 2. Process bill actions
-        else if (event.type === 'bill_created' && event.bill) {
-          const tab = event.bill.status === 'completed' ? 'Completed Bills' : 'Pending Bills';
-          await appendRow(sheets, sheetId, tab, formatBillRow(event.bill, placeName));
-        }
-
-        else if (event.type === 'bill_updated' && event.bill) {
-          // A bill can be updated in either Pending or Completed tabs
-          const rowValues = formatBillRow(event.bill, placeName);
-          const didUpdatePending = await updateRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id, rowValues);
-          if (!didUpdatePending) {
-            await updateRowInTab(sheets, sheetId, 'Completed Bills', event.bill.id, rowValues);
-          }
-        }
-
-        else if (event.type === 'bill_completed' && event.bill) {
-          // Delete from Pending Bills, Append to Completed Bills
-          await deleteRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id);
-          await appendRow(sheets, sheetId, 'Completed Bills', formatBillRow(event.bill, placeName));
-        }
-
-        else if (event.type === 'bill_deleted' && event.bill) {
-          const didDeletePending = await deleteRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id);
-          if (!didDeletePending) {
-            await deleteRowInTab(sheets, sheetId, 'Completed Bills', event.bill.id);
-          }
-        }
-
-        // 3. Log all sync actions to the "Activity Logs" tab
-        await logActivity(sheets, sheetId, event);
-      });
-
-    } catch (err) {
-      // Log errors silently as per spec (non-blocking)
-      console.error('Google Sheets Synchronization Error:', err);
+  try {
+    const sheetId = process.env.GOOGLE_SHEET_ID;
+    if (!sheetId) {
+      console.warn('GOOGLE_SHEET_ID environment variable is not defined. Skipping sync.');
+      return;
     }
-  }, 0);
+
+    const sheets = getSheetsClient();
+
+    // Auto-ensure all required tabs exist with beautiful headers (now including Place Name)
+    await ensureSheetTabInitialized(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
+    await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+    await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+    await ensureSheetTabInitialized(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
+
+    // Fetch the human-readable Place Name for bill sync events
+    let placeName = '';
+    if (event.bill) {
+      try {
+        const { getSupabaseServer } = require('@/lib/supabase/server');
+        const supabase = getSupabaseServer();
+        const { data: place } = await supabase
+          .from('places')
+          .select('name')
+          .eq('id', event.bill.place_id)
+          .single();
+        if (place) {
+          placeName = place.name;
+        }
+      } catch (e) {
+        console.warn('Could not fetch place name for sheet sync:', e);
+      }
+    }
+
+    await runWithRetry(async () => {
+      // 1. Process place actions
+      if (event.type === 'place_created' && event.place) {
+        await appendRow(sheets, sheetId, 'Places', [
+          event.place.id,
+          event.place.name,
+          event.place.created_at,
+        ]);
+      } 
+      
+      else if (event.type === 'place_updated' && event.place) {
+        await updateRowInTab(sheets, sheetId, 'Places', event.place.id, [
+          event.place.id,
+          event.place.name,
+          event.place.created_at,
+        ]);
+      } 
+      
+      else if (event.type === 'place_deleted' && event.place) {
+        await deleteRowInTab(sheets, sheetId, 'Places', event.place.id);
+      }
+
+      // 2. Process bill actions
+      else if (event.type === 'bill_created' && event.bill) {
+        const tab = event.bill.status === 'completed' ? 'Completed Bills' : 'Pending Bills';
+        await appendRow(sheets, sheetId, tab, formatBillRow(event.bill, placeName));
+      }
+
+      else if (event.type === 'bill_updated' && event.bill) {
+        // A bill can be updated in either Pending or Completed tabs
+        const rowValues = formatBillRow(event.bill, placeName);
+        const didUpdatePending = await updateRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id, rowValues);
+        if (!didUpdatePending) {
+          await updateRowInTab(sheets, sheetId, 'Completed Bills', event.bill.id, rowValues);
+        }
+      }
+
+      else if (event.type === 'bill_completed' && event.bill) {
+        // Delete from Pending Bills, Append to Completed Bills
+        await deleteRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id);
+        await appendRow(sheets, sheetId, 'Completed Bills', formatBillRow(event.bill, placeName));
+      }
+
+      else if (event.type === 'bill_deleted' && event.bill) {
+        const didDeletePending = await deleteRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id);
+        if (!didDeletePending) {
+          await deleteRowInTab(sheets, sheetId, 'Completed Bills', event.bill.id);
+        }
+      }
+
+      // 3. Log all sync actions to the "Activity Logs" tab
+      await logActivity(sheets, sheetId, event);
+    });
+
+  } catch (err) {
+    // Log errors silently as per spec (non-blocking)
+    console.error('Google Sheets Synchronization Error:', err);
+  }
 };
 
 // Google Sheet helper functions
