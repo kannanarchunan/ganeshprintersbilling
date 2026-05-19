@@ -79,7 +79,7 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(totalPendingSum);
-    
+
     doc.text(formattedSum, 130, 62);
 
     // Table Data Mapping
@@ -89,12 +89,12 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
         month: '2-digit',
         year: 'numeric'
       });
-      const dueDate = bill.due_date 
+      const dueDate = bill.due_date
         ? new Date(bill.due_date).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          })
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
         : '-';
 
       const formattedAmount = 'Rs. ' + new Intl.NumberFormat('en-IN', {
@@ -127,7 +127,7 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
       },
       columnStyles: {
         0: { halign: 'left' },
-        1: { halign: 'right' }, // Align the entire Amount column (header + cells) perfectly to the right!
+        1: { halign: 'left' }, // Changed from 'right' to 'left' to align the Amount column
         2: { halign: 'left' },
         3: { halign: 'left' },
       },
