@@ -33,10 +33,14 @@ export default function LoginPage() {
       const trimmedEmail = email.trim().toLowerCase();
       const trimmedPassword = password.trim();
 
-      // Owner verification (default single user credentials)
+      const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@ganesh.com';
+      const altEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL_ALT || 'ganesh@billing.com';
+      const adminPassword = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'ganesh123';
+
+      // Owner verification (configurable via environment variables)
       if (
-        (trimmedEmail === 'admin@ganesh.com' && trimmedPassword === 'ganesh123') ||
-        (trimmedEmail === 'ganesh@billing.com' && trimmedPassword === 'ganesh123')
+        (trimmedEmail === adminEmail.trim().toLowerCase() && trimmedPassword === adminPassword.trim()) ||
+        (trimmedEmail === altEmail.trim().toLowerCase() && trimmedPassword === adminPassword.trim())
       ) {
         localStorage.setItem('ganesh_auth_session', JSON.stringify({
           user: trimmedEmail,
