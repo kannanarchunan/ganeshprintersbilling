@@ -120,7 +120,6 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
         textColor: [255, 255, 255],
         fontSize: 10,
         fontStyle: 'bold',
-        halign: 'left',
       },
       bodyStyles: {
         fontSize: 9,
@@ -128,7 +127,7 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
         halign: 'left',
       },
       columnStyles: {
-        1: { halign: 'right' }, // Align amount right for financial legibility
+        1: { halign: 'right' }, // Align both header and cells to the right for perfect financial legibility
       },
       alternateRowStyles: {
         fillColor: [249, 250, 251], // Gray-50
