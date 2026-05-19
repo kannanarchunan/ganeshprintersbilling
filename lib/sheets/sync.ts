@@ -94,6 +94,8 @@ export const syncToSheets = async (event: SyncEvent): Promise<void> => {
       
       else if (event.type === 'place_deleted' && event.place) {
         await deleteRowInTab(sheets, sheetId, 'Places', event.place.id);
+        await deleteBillsForPlace(sheets, sheetId, 'Pending Bills', event.place.id);
+        await deleteBillsForPlace(sheets, sheetId, 'Completed Bills', event.place.id);
       }
 
       // 2. Process bill actions
@@ -223,6 +225,57 @@ const deleteRowInTab = async (sheets: any, spreadsheetId: string, range: string,
   });
 
   return true;
+};
+
+const deleteBillsForPlace = async (sheets: any, spreadsheetId: string, range: string, placeId: string): Promise<void> => {
+  // Fetch existing rows (we need the place_id column which is at index 1, i.e. Column B)
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${range}!A:B`, // Read columns A and B
+  });
+
+  const rows = res.data.values;
+  if (!rows || rows.length === 0) return;
+
+  // Find all indices of rows where place_id (index 1) equals placeId
+  const matchingIndices = [];
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i][1] === placeId) {
+      matchingIndices.push(i);
+    }
+  }
+
+  if (matchingIndices.length === 0) return;
+
+  // Fetch sheet metadata to find correct sheetId
+  const sheetMetadata = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheet = sheetMetadata.data.sheets.find((s: any) => s.properties.title === range);
+  if (!sheet) return;
+
+  const sheetDbId = sheet.properties.sheetId;
+
+  // We delete rows from bottom to top so that row indices do not shift for pending deletions!
+  matchingIndices.reverse();
+
+  for (const rowIndex of matchingIndices) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            deleteDimension: {
+              range: {
+                sheetId: sheetDbId,
+                dimension: 'ROWS',
+                startIndex: rowIndex,
+                endIndex: rowIndex + 1,
+              },
+            },
+          },
+        ],
+      },
+    });
+  }
 };
 
 const logActivity = async (sheets: any, spreadsheetId: string, event: SyncEvent) => {
