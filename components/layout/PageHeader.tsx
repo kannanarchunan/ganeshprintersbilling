@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, LogOut, Wifi, WifiOff } from 'lucide-react';
-import { Button } from '@/components/ui/Button'; // Will create Button shortly
+import { Button } from '@/components/ui/Button'; 
 import { cn } from '@/lib/utils';
+import { useLanguage } from '../ui/LanguageProvider';
 
 interface PageHeaderProps {
   title: string;
@@ -47,6 +48,12 @@ export default function PageHeader({
     router.replace('/login');
   };
 
+  const { language, setLanguage } = useLanguage();
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'ta' : 'en');
+  };
+
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 shadow-[0_4px_12px_rgba(22,163,74,0.12)]">
       <div className="flex items-center justify-between gap-3">
@@ -85,7 +92,14 @@ export default function PageHeader({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={toggleLanguage}
+            className="text-white/90 hover:text-white px-2 py-0.5 hover:bg-white/15 rounded-lg active:scale-95 transition-all text-[10px] font-bold border border-white/20 shrink-0 select-none cursor-pointer"
+            title={language === 'en' ? 'தமிழ் மொழிக்கு மாற்றவும்' : 'Switch to English'}
+          >
+            {language === 'en' ? 'தமிழ்' : 'EN'}
+          </button>
           {rightAction}
           {showLogout && (
             <button

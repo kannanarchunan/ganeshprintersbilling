@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, FileText } from 'lucide-react';
 import Button from '../ui/Button';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface AddBillSheetProps {
   isOpen: boolean;
@@ -27,6 +28,7 @@ export default function AddBillSheet({
   const [notes, setNotes] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
+  const { t } = useLanguage();
 
   if (!isOpen) return null;
 
@@ -38,12 +40,12 @@ export default function AddBillSheet({
     const parsedAmount = parseFloat(amount);
 
     if (!trimmedNum) {
-      setError('Bill number is required.');
+      setError(t.language === 'ta' ? 'பில் எண் தேவை.' : 'Bill number is required.');
       return;
     }
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError('Please specify a valid amount greater than 0.');
+      setError(t.language === 'ta' ? 'தயவுசெய்து 0 ஐ விட அதிகமான தொகையைக் குறிப்பிடவும்.' : 'Please specify a valid amount greater than 0.');
       return;
     }
 
@@ -62,7 +64,7 @@ export default function AddBillSheet({
       setDueDate('');
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to submit bill. Number may be duplicate.');
+      setError(err.message || (t.language === 'ta' ? 'பில் சமர்ப்பிப்பதில் தோல்வி. பில் எண் ஏற்கனவே இருக்கலாம்.' : 'Failed to submit bill. Number may be duplicate.'));
     }
   };
 
@@ -85,8 +87,12 @@ export default function AddBillSheet({
               <FileText className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">Add New Bill</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Log a pending delivery invoice</p>
+              <h3 className="font-bold text-slate-800 text-sm">
+                {t.language === 'ta' ? 'புதிய பில் சேர்க்கவும்' : 'Add New Bill'}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-semibold">
+                {t.language === 'ta' ? 'நிலுவையில் உள்ள டெலிவரி பில்லைப் பதிவு செய்யவும்' : 'Log a pending delivery invoice'}
+              </p>
             </div>
           </div>
           <button 
@@ -104,9 +110,15 @@ export default function AddBillSheet({
             </p>
           )}
 
+          {t.language === 'ta' && (
+            <p className="text-[9px] text-amber-600 bg-amber-50 border border-amber-100 rounded-xl p-2 font-semibold">
+              ⚠️ பில் எண் மற்றும் விவரக்குறிப்புகளை ஆங்கிலத்தில் மட்டுமே உள்ளிடவும். பில் மற்றும் ரசீதுகள் ஆங்கிலத்தில் மட்டுமே அச்சிடப்படும்.
+            </p>
+          )}
+
           <div className="space-y-1">
             <label htmlFor="bill-num" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Bill / Invoice Number
+              {t.language === 'ta' ? 'பில் / விலைப்பட்டியல் எண் (ஆங்கிலத்தில்)' : 'Bill / Invoice Number'}
             </label>
             <input
               id="bill-num"
@@ -123,7 +135,7 @@ export default function AddBillSheet({
 
           <div className="space-y-1">
             <label htmlFor="bill-amount" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Invoice Amount (₹)
+              {t.language === 'ta' ? 'பில் தொகை (₹)' : 'Invoice Amount (₹)'}
             </label>
             <input
               id="bill-amount"
@@ -140,7 +152,7 @@ export default function AddBillSheet({
 
           <div className="space-y-1">
             <label htmlFor="bill-due" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Due Date (Optional)
+              {t.language === 'ta' ? 'செலுத்த வேண்டிய தேதி (விருப்பத்திற்குரியது)' : 'Due Date (Optional)'}
             </label>
             <input
               id="bill-due"
@@ -154,12 +166,12 @@ export default function AddBillSheet({
 
           <div className="space-y-1">
             <label htmlFor="bill-notes" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Delivery Notes (Optional)
+              {t.language === 'ta' ? 'விவரக்குறிப்புகள் (விருப்பத்திற்குரியது - ஆங்கிலத்தில்)' : 'Delivery Notes (Optional)'}
             </label>
             <input
               id="bill-notes"
               type="text"
-              placeholder="e.g. 5 boxes wall poster, Cash on Delivery"
+              placeholder={t.language === 'ta' ? 'உதா: 5 boxes wall poster' : 'e.g. 5 boxes wall poster, Cash on Delivery'}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={isLoading}
@@ -175,14 +187,14 @@ export default function AddBillSheet({
               disabled={isLoading}
               className="flex-1 rounded-xl text-xs h-10"
             >
-              Cancel
+              {t.language === 'ta' ? 'ரத்துசெய்' : 'Cancel'}
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading}
               className="flex-1 rounded-xl text-xs h-10"
             >
-              {isLoading ? 'Saving...' : 'Add Invoice'}
+              {isLoading ? (t.language === 'ta' ? 'சேமிக்கப்படுகிறது...' : 'Saving...') : (t.language === 'ta' ? 'பில் சேர்' : 'Add Invoice')}
             </Button>
           </div>
         </form>

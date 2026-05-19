@@ -4,6 +4,7 @@ import { Square, CheckSquare, Clipboard, Calendar } from 'lucide-react';
 import { Bill } from '@/types';
 import { formatIndianCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface BillCardProps {
   bill: Bill;
@@ -11,6 +12,7 @@ interface BillCardProps {
 }
 
 export default function BillCard({ bill, onSelect }: BillCardProps) {
+  const { t } = useLanguage();
   const isPending = bill.status === 'pending';
 
   const formattedAmount = formatIndianCurrency(bill.amount);
@@ -42,12 +44,12 @@ export default function BillCard({ bill, onSelect }: BillCardProps) {
           {isPending && dueDateStr && (
             <span className="inline-flex items-center gap-0.5 text-[8px] bg-red-50 text-red-600 font-bold px-1.5 py-0.5 rounded-full">
               <Calendar className="h-2 w-2" />
-              Due: {dueDateStr}
+              {t.language === 'ta' ? 'தவணை' : 'Due'}: {dueDateStr}
             </span>
           )}
           {!isPending && (
             <span className="text-[8px] bg-primary-50 text-primary-700 font-bold px-1.5 py-0.5 rounded-full">
-              Paid
+              {t.language === 'ta' ? 'செலுத்தப்பட்டது' : 'Paid'}
             </span>
           )}
         </div>
@@ -65,8 +67,8 @@ export default function BillCard({ bill, onSelect }: BillCardProps) {
 
         <div className="text-[8px] text-slate-400 font-semibold tracking-wide">
           {isPending 
-            ? `Delivered: ${createdDateStr}`
-            : `Paid: ${bill.completed_at ? new Date(bill.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : createdDateStr}`
+            ? (t.language === 'ta' ? `டெலிவரி: ${createdDateStr}` : `Delivered: ${createdDateStr}`)
+            : (t.language === 'ta' ? `பணம் செலுத்தியது: ${bill.completed_at ? new Date(bill.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : createdDateStr}` : `Paid: ${bill.completed_at ? new Date(bill.completed_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : createdDateStr}`)
           }
         </div>
       </div>

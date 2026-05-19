@@ -3,6 +3,7 @@
 import { X, CheckCircle, Edit, Trash } from 'lucide-react';
 import { Bill } from '@/types';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface BillActionSheetProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ export default function BillActionSheet({
   onEdit,
   onDelete,
 }: BillActionSheetProps) {
+  const { t } = useLanguage();
+
   if (!isOpen || !bill) return null;
 
   return (
@@ -38,8 +41,12 @@ export default function BillActionSheet({
 
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="font-bold text-slate-800 text-sm">Bill Operations</h3>
-            <p className="text-[10px] text-slate-400 font-semibold">Bill #{bill.bill_number} • Outstanding</p>
+            <h3 className="font-bold text-slate-800 text-sm">
+              {t.language === 'ta' ? 'பில் நடவடிக்கைகள்' : 'Bill Operations'}
+            </h3>
+            <p className="text-[10px] text-slate-400 font-semibold">
+              {t.language === 'ta' ? `பில் #${bill.bill_number} • நிலுவையில் உள்ளது` : `Bill #${bill.bill_number} • Outstanding`}
+            </p>
           </div>
           <button 
             onClick={onClose} 
@@ -60,7 +67,7 @@ export default function BillActionSheet({
             className="w-full bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-100 text-emerald-800 flex items-center gap-3.5 px-4.5 py-3.5 rounded-2xl active:scale-98 transition-all font-bold text-xs"
           >
             <CheckCircle className="h-5 w-5 text-emerald-600" />
-            Mark as Completed (Paid)
+            {t.language === 'ta' ? 'செலுத்தப்பட்டதாகக் குறி (செலுத்தப்பட்டது)' : 'Mark as Completed (Paid)'}
           </button>
 
           {/* 2. Edit Invoice */}
@@ -72,7 +79,7 @@ export default function BillActionSheet({
             className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200/50 text-slate-700 flex items-center gap-3.5 px-4.5 py-3.5 rounded-2xl active:scale-98 transition-all font-bold text-xs"
           >
             <Edit className="h-5 w-5 text-slate-500" />
-            Edit Bill Details
+            {t.language === 'ta' ? 'பில் விவரங்களைத் திருத்து' : 'Edit Bill Details'}
           </button>
 
           {/* 3. Delete Invoice */}
@@ -84,7 +91,7 @@ export default function BillActionSheet({
             className="w-full bg-red-50 hover:bg-red-100 border border-red-100/70 text-red-700 flex items-center gap-3.5 px-4.5 py-3.5 rounded-2xl active:scale-98 transition-all font-bold text-xs"
           >
             <Trash className="h-5 w-5 text-red-600" />
-            Delete Bill Record
+            {t.language === 'ta' ? 'பில் பதிவை நீக்கு' : 'Delete Bill Record'}
           </button>
 
           {/* 4. Close Sheet */}
@@ -92,7 +99,7 @@ export default function BillActionSheet({
             onClick={onClose}
             className="w-full bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 flex items-center justify-center py-3.5 rounded-2xl active:scale-98 transition-all font-bold text-xs mt-2"
           >
-            Cancel Action
+            {t.language === 'ta' ? 'ரத்துசெய்' : 'Cancel Action'}
           </button>
         </div>
       </div>

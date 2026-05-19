@@ -12,10 +12,12 @@ import SkeletonCard from '@/components/ui/SkeletonCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { usePlaces } from '@/hooks/usePlaces';
 import { useToast } from '@/components/ui/ToastProvider';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 export default function PlacesPage() {
   const { places, isLoading, error, refetch, createPlace, isCreating } = usePlaces();
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -49,15 +51,15 @@ export default function PlacesPage() {
       <MobileLayout showNav={true}>
         {/* Sticky page header with action buttons */}
         <PageHeader
-          title="Delivery Places"
-          subtitle="Ganesh Printers Billing Hub"
+          title={t.deliveryPlaces}
+          subtitle={t.billingHub}
           showLogout={true}
           rightAction={
             <button
               onClick={handleRefresh}
               disabled={isLoading}
               className="text-white/80 hover:text-white hover:bg-white/10 active:scale-90 p-2 rounded-full transition-all duration-100 disabled:opacity-50"
-              title="Refresh"
+              title={t.refresh}
             >
               <RefreshCw className={`h-4.5 w-4.5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -65,7 +67,7 @@ export default function PlacesPage() {
         />
 
         {/* Large search input */}
-        <PlaceSearchBar value={search} onChange={setSearch} />
+        <PlaceSearchBar value={search} onChange={setSearch} placeholder={t.searchPlaces} />
 
         <div className="flex-1 overflow-y-auto pt-2 pb-6 space-y-3">
           {isLoading ? (
@@ -81,18 +83,18 @@ export default function PlacesPage() {
             // Error panel
             <div className="p-6 text-center select-none">
               <p className="text-xs text-red-600 font-bold bg-red-50 border border-red-100 rounded-2xl p-4.5">
-                ⚠️ Failed to load delivery locations. Please pull to refresh.
+                {t.language === 'ta' ? '⚠️ டெலிவரி இடங்களை ஏற்றுவதில் தோல்வி. புதுப்பிக்க கீழே இழுக்கவும்.' : '⚠️ Failed to load delivery locations. Please pull to refresh.'}
               </p>
             </div>
           ) : filteredPlaces.length === 0 ? (
             // Empty state display
             <EmptyState
               icon={FolderSearch}
-              title={search ? 'No Match Found' : 'No Places Added'}
+              title={search ? (t.language === 'ta' ? 'பொருத்தம் எதுவும் இல்லை' : 'No Match Found') : (t.language === 'ta' ? 'இடங்கள் எதுவும் இல்லை' : 'No Places Added')}
               description={
                 search
-                  ? `We couldn't find any location matching "${search}". Please adjust your query.`
-                  : 'Start tracking delivery invoices by logging your first delivery place.'
+                  ? (t.language === 'ta' ? `"${search}"-க்கு இணையான இடம் எதுவும் இல்லை. உங்கள் தேடலை மாற்றவும்.` : `We couldn't find any location matching "${search}". Please adjust your query.`)
+                  : (t.language === 'ta' ? 'முதல் டெலிவரி இடத்தை பதிவு செய்து பில்களை கண்காணிக்க தொடங்குங்கள்.' : 'Start tracking delivery invoices by logging your first delivery place.')
               }
               action={
                 !search ? (
@@ -100,7 +102,7 @@ export default function PlacesPage() {
                     onClick={() => setIsAddOpen(true)}
                     className="bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold px-4 py-2.5 text-xs shadow-md shadow-primary-500/20 active:scale-95 transition-all select-none"
                   >
-                    Add First Place
+                    {t.addFirstPlace}
                   </button>
                 ) : undefined
               }
@@ -117,7 +119,7 @@ export default function PlacesPage() {
         <button
           onClick={() => setIsAddOpen(true)}
           className="fixed bottom-20 right-6 z-30 w-14 h-14 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(22,163,74,0.3)] active:scale-90 active:bg-primary-800 transition-all select-none focus:outline-none"
-          title="Add Location"
+          title={t.addLocation}
           id="btn-add-place"
         >
           <Plus className="h-6 w-6" />

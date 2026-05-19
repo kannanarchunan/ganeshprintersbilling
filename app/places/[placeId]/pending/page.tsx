@@ -18,6 +18,7 @@ import { useBills } from '@/hooks/useBills';
 import { useToast } from '@/components/ui/ToastProvider';
 import { formatIndianCurrency } from '@/lib/utils';
 import { Bill } from '@/types';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface PendingBillsProps {
   params: {
@@ -28,6 +29,7 @@ interface PendingBillsProps {
 export default function PendingBillsPage({ params }: PendingBillsProps) {
   const { placeId } = params;
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [placeName, setPlaceName] = useState('Location');
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
@@ -131,7 +133,7 @@ export default function PendingBillsPage({ params }: PendingBillsProps) {
       <MobileLayout showNav={true}>
         <PageHeader
           title={placeName}
-          subtitle="Pending Bills Checklist"
+          subtitle={t.pendingBills}
           showBack={true}
           backHref={`/places/${placeId}`}
           rightAction={
@@ -139,7 +141,7 @@ export default function PendingBillsPage({ params }: PendingBillsProps) {
               onClick={handleRefresh}
               disabled={isLoading}
               className="text-white/80 hover:text-white hover:bg-white/10 active:scale-90 p-2 rounded-full transition-all duration-100 disabled:opacity-50"
-              title="Refresh"
+              title={t.refresh}
             >
               <RefreshCw className={`h-4.5 w-4.5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -151,7 +153,7 @@ export default function PendingBillsPage({ params }: PendingBillsProps) {
           <div className="mx-4 mt-3 bg-gradient-to-tr from-amber-500 to-amber-600 rounded-2xl p-4.5 text-white shadow-lg shadow-amber-500/20 select-none flex items-center justify-between">
             <div>
               <span className="text-[9px] font-bold uppercase tracking-wider text-amber-100">
-                Outstanding Balance
+                {t.outstandingBalance}
               </span>
               <h2 className="text-2xl font-black tracking-tight leading-none mt-1">
                 {formatIndianCurrency(totalPendingSum)}
@@ -176,20 +178,20 @@ export default function PendingBillsPage({ params }: PendingBillsProps) {
           ) : error ? (
             <div className="p-6 text-center">
               <p className="text-xs text-red-600 font-bold bg-red-50 border border-red-100 rounded-2xl p-4.5">
-                ⚠️ Failed to load pending bills. Please pull to refresh.
+                {t.language === 'ta' ? '⚠️ நிலுவை பில்களை ஏற்றுவதில் தோல்வி. புதுப்பிக்க கீழே இழுக்கவும்.' : '⚠️ Failed to load pending bills. Please pull to refresh.'}
               </p>
             </div>
           ) : bills.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
-              title="Outstanding Balance Clear!"
-              description={`Awesome! All logged bills for "${placeName}" have been completed and paid off.`}
+              title={t.language === 'ta' ? 'நிலுவைத் தொகை பூஜ்ஜியம்!' : 'Outstanding Balance Clear!'}
+              description={t.language === 'ta' ? `அருமை! "${placeName}"-க்கான அனைத்து பில்களும் செலுத்தப்பட்டுவிட்டன.` : `Awesome! All logged bills for "${placeName}" have been completed and paid off.`}
               action={
                 <button
                   onClick={() => setIsAddOpen(true)}
                   className="bg-primary-600 hover:bg-primary-700 text-white rounded-xl font-bold px-4 py-2.5 text-xs shadow-md shadow-primary-500/20 active:scale-95 transition-all select-none"
                 >
-                  Create First Bill
+                  {t.language === 'ta' ? 'முதல் பில் உருவாக்கவும்' : 'Create First Bill'}
                 </button>
               }
             />
@@ -246,9 +248,9 @@ export default function PendingBillsPage({ params }: PendingBillsProps) {
         <ConfirmDialog
           isOpen={isDeleteOpen}
           onOpenChange={setIsDeleteOpen}
-          title="Delete Invoice?"
-          description={`Are you sure you want to delete bill #${selectedBill?.bill_number} for ${placeName}? This will permanently remove it from database and spreadsheet.`}
-          confirmText="Yes, Delete Bill"
+          title={t.language === 'ta' ? 'பில்லை நீக்கலாமா?' : 'Delete Invoice?'}
+          description={t.language === 'ta' ? `பில் #${selectedBill?.bill_number}-ஐ நீக்க விரும்புகிறீர்களா என்பதில் உறுதியாக இருக்கிறீர்களா? இது தரவுத்தளத்திலிருந்தும் விரிதாளில் இருந்தும் நிரந்தரமாக நீக்கப்படும்.` : `Are you sure you want to delete bill #${selectedBill?.bill_number} for ${placeName}? This will permanently remove it from database and spreadsheet.`}
+          confirmText={t.language === 'ta' ? 'ஆம், பில்லை நீக்கு' : 'Yes, Delete Bill'}
           onConfirm={handleDeleteBill}
           isLoading={isDeleting}
         />

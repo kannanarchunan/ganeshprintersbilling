@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { MapPin, ArrowRight } from 'lucide-react';
 import { Place } from '@/types';
 import { formatIndianCurrency } from '@/lib/utils';
+import { useLanguage } from '../ui/LanguageProvider';
 
 interface PlaceCardProps {
   place: Place;
 }
 
 export default function PlaceCard({ place }: PlaceCardProps) {
+  const { t } = useLanguage();
   // Outstanding metrics
   const pendingCount = place.pending_count || 0;
   const totalPending = place.total_pending || 0;
@@ -30,7 +32,7 @@ export default function PlaceCard({ place }: PlaceCardProps) {
               {place.name}
             </h3>
             <p className="text-[10px] text-slate-400 font-semibold mt-1 uppercase tracking-wider">
-              {pendingCount} pending bills
+              {pendingCount} {t.language === 'ta' ? 'நிலுவை பில்கள்' : 'pending bills'}
             </p>
           </div>
         </div>
@@ -43,7 +45,7 @@ export default function PlaceCard({ place }: PlaceCardProps) {
             </span>
           ) : (
             <span className="text-[10px] font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-xl border border-primary-100/30">
-              Clear
+              {t.language === 'ta' ? 'பூஜ்ஜியம்' : 'Clear'}
             </span>
           )}
           <ArrowRight className="h-4 w-4 text-slate-300" />

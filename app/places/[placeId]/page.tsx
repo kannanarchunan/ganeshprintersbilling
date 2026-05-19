@@ -14,6 +14,7 @@ import { usePlaces } from '@/hooks/usePlaces';
 import { useToast } from '@/components/ui/ToastProvider';
 import { formatIndianCurrency } from '@/lib/utils';
 import { Place } from '@/types';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface PlaceDashboardProps {
   params: {
@@ -25,6 +26,7 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
   const { placeId } = params;
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   // Custom hooks for place mutate operations
   const { updatePlace, isUpdating, deletePlace, isDeleting } = usePlaces();
@@ -88,7 +90,7 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
     return (
       <AuthGuard>
         <MobileLayout showNav={true}>
-          <PageHeader title="Loading..." showBack={true} />
+          <PageHeader title={t.language === 'ta' ? 'ஏற்றப்படுகிறது...' : 'Loading...'} showBack={true} />
           <div className="p-4 space-y-4">
             <SkeletonBanner />
             <SkeletonCard />
@@ -103,10 +105,10 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
     return (
       <AuthGuard>
         <MobileLayout showNav={true}>
-          <PageHeader title="Not Found" showBack={true} />
+          <PageHeader title={t.language === 'ta' ? 'இடம் கிடைக்கவில்லை' : 'Place Not Found'} showBack={true} />
           <div className="p-6 text-center">
             <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded-2xl p-4.5">
-              ⚠️ This delivery place does not exist or has been deleted.
+              {t.language === 'ta' ? '⚠️ இந்த டெலிவரி இடம் இல்லை அல்லது நீக்கப்பட்டுவிட்டது.' : '⚠️ This delivery place does not exist or has been deleted.'}
             </p>
           </div>
         </MobileLayout>
@@ -125,7 +127,7 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
       <MobileLayout showNav={true}>
         <PageHeader
           title={place.name}
-          subtitle="Location Dashboard"
+          subtitle={t.locationDashboard}
           showBack={true}
           backHref="/"
           rightAction={
@@ -133,14 +135,14 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
               <button
                 onClick={() => setIsEditOpen(true)}
                 className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-full active:scale-90 transition-all"
-                title="Rename Location"
+                title={t.language === 'ta' ? 'பெயரை மாற்று' : 'Rename Location'}
               >
                 <Edit className="h-4.5 w-4.5" />
               </button>
               <button
                 onClick={() => setIsDeleteOpen(true)}
                 className="text-white/80 hover:text-white p-2 hover:bg-white/10 rounded-full active:scale-90 transition-all text-red-100 hover:text-red-200"
-                title="Delete Location"
+                title={t.language === 'ta' ? 'இடத்தை நீக்கு' : 'Delete Location'}
               >
                 <Trash className="h-4.5 w-4.5" />
               </button>
@@ -169,9 +171,9 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
                 <Clock className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-slate-800 text-sm">Pending Bills</h4>
+                <h4 className="font-extrabold text-slate-800 text-sm">{t.pendingBills}</h4>
                 <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
-                  Collect {formatIndianCurrency(totalPending)} outstanding
+                  {t.language === 'ta' ? `நிலுவையில் உள்ள ${formatIndianCurrency(totalPending)} வசூலிக்கவும்` : `Collect ${formatIndianCurrency(totalPending)} outstanding`}
                 </p>
               </div>
             </div>
@@ -195,9 +197,9 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <div>
-                <h4 className="font-extrabold text-slate-800 text-sm">Completed Bills</h4>
+                <h4 className="font-extrabold text-slate-800 text-sm">{t.completedBills}</h4>
                 <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
-                  Paid bills statement archive
+                  {t.language === 'ta' ? 'செலுத்தப்பட்ட பில்களின் காப்பகம்' : 'Paid bills statement archive'}
                 </p>
               </div>
             </div>
@@ -210,12 +212,12 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
           <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3">
             <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
               <History className="h-4 w-4 text-slate-400" />
-              Recent Local Activity
+              {t.language === 'ta' ? 'சமீபத்திய உள்ளூர் நடவடிக்கை' : 'Recent Local Activity'}
             </h4>
             
             {activities.length === 0 ? (
               <p className="text-[10px] text-slate-400 italic">
-                No recent transactions logged for this place.
+                {t.language === 'ta' ? 'இந்த இடத்திற்கு சமீபத்திய பரிவர்த்தனைகள் எதுவும் இல்லை.' : 'No recent transactions logged for this place.'}
               </p>
             ) : (
               <div className="space-y-2.5">
@@ -231,15 +233,15 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
                     <div key={log.id} className="text-[10px] flex items-start justify-between gap-2 border-b border-slate-200/50 pb-2 last:border-0 last:pb-0">
                       <div className="space-y-0.5">
                         <span className="font-bold text-slate-800">
-                          {log.action_type === 'bill_created' && `Created pending bill #${log.bill_number}`}
-                          {log.action_type === 'bill_completed' && `Collected bill #${log.bill_number}`}
-                          {log.action_type === 'bill_updated' && `Updated details for bill #${log.bill_number}`}
-                          {log.action_type === 'bill_deleted' && `Deleted bill #${log.bill_number}`}
-                          {log.action_type === 'place_updated' && `Renamed location to "${log.place_name}"`}
+                          {log.action_type === 'bill_created' && (t.language === 'ta' ? `பில் #${log.bill_number} உருவாக்கப்பட்டது` : `Created pending bill #${log.bill_number}`)}
+                          {log.action_type === 'bill_completed' && (t.language === 'ta' ? `பில் #${log.bill_number} வசூலிக்கப்பட்டது` : `Collected bill #${log.bill_number}`)}
+                          {log.action_type === 'bill_updated' && (t.language === 'ta' ? `பில் #${log.bill_number} விவரங்கள் புதுப்பிக்கப்பட்டன` : `Updated details for bill #${log.bill_number}`)}
+                          {log.action_type === 'bill_deleted' && (t.language === 'ta' ? `பில் #${log.bill_number} நீக்கப்பட்டது` : `Deleted bill #${log.bill_number}`)}
+                          {log.action_type === 'place_updated' && (t.language === 'ta' ? `இடத்தின் பெயர் "${log.place_name}" என மாற்றப்பட்டது` : `Renamed location to "${log.place_name}"`)}
                         </span>
                         {log.amount && (
                           <p className="font-extrabold text-slate-600">
-                            Amount: {formatIndianCurrency(Number(log.amount))}
+                            {t.language === 'ta' ? 'தொகை' : 'Amount'}: {formatIndianCurrency(Number(log.amount))}
                           </p>
                         )}
                       </div>
@@ -265,9 +267,9 @@ export default function PlaceDashboardPage({ params }: PlaceDashboardProps) {
         <ConfirmDialog
           isOpen={isDeleteOpen}
           onOpenChange={setIsDeleteOpen}
-          title={`Delete ${place.name}?`}
-          description="Are you absolutely sure you want to delete this place? This will permanently erase this location and all linked bills. This action cannot be undone."
-          confirmText="Yes, Delete Location"
+          title={t.language === 'ta' ? `"${place.name}" நீக்கலாமா?` : `Delete ${place.name}?`}
+          description={t.language === 'ta' ? 'இந்த இடத்தை நீக்க விரும்புகிறீர்களா என்பதில் உறுதியாக இருக்கிறீர்களா? இது இந்த இடத்தையும் அதனுடன் இணைக்கப்பட்ட அனைத்து பில்களையும் நிரந்தரமாக அழித்துவிடும். இந்த செயலை மாற்ற முடியாது.' : 'Are you absolutely sure you want to delete this place? This will permanently erase this location and all linked bills. This action cannot be undone.'}
+          confirmText={t.language === 'ta' ? 'ஆம், இடத்தை நீக்கு' : 'Yes, Delete Location'}
           onConfirm={handleDelete}
           isLoading={isDeleting}
         />

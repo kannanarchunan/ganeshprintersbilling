@@ -14,6 +14,7 @@ import { useBills } from '@/hooks/useBills';
 import { useToast } from '@/components/ui/ToastProvider';
 import { formatIndianCurrency } from '@/lib/utils';
 import { Bill } from '@/types';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface CompletedBillsProps {
   params: {
@@ -24,6 +25,7 @@ interface CompletedBillsProps {
 export default function CompletedBillsPage({ params }: CompletedBillsProps) {
   const { placeId } = params;
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   const [placeName, setPlaceName] = useState('Location');
   const [search, setSearch] = useState('');
@@ -91,7 +93,7 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
       <MobileLayout showNav={true}>
         <PageHeader
           title={placeName}
-          subtitle="Completed / Paid Bills"
+          subtitle={t.completedBills}
           showBack={true}
           backHref={`/places/${placeId}`}
           rightAction={
@@ -99,7 +101,7 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
               onClick={handleRefresh}
               disabled={isLoading}
               className="text-white/80 hover:text-white hover:bg-white/10 active:scale-90 p-2 rounded-full transition-all duration-100 disabled:opacity-50"
-              title="Refresh"
+              title={t.refresh}
             >
               <RefreshCw className={`h-4.5 w-4.5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
@@ -111,7 +113,7 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
           <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by Bill Number..."
+            placeholder={t.language === 'ta' ? 'பில் எண் மூலம் தேடுங்கள்...' : 'Search by Bill Number...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full bg-slate-50 border border-slate-200 focus:border-primary-400 focus:bg-white rounded-2xl pl-10 pr-9 py-2.5 placeholder:text-slate-400 text-xs font-semibold focus:outline-none transition-all duration-150"
@@ -123,7 +125,7 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
           <div className="mx-4 mt-2.5 bg-gradient-to-tr from-primary-600 to-primary-700 rounded-2xl p-4.5 text-white shadow-lg shadow-primary-600/20 select-none flex items-center justify-between">
             <div>
               <span className="text-[9px] font-bold uppercase tracking-wider text-primary-100">
-                Total Collected Balance
+                {t.language === 'ta' ? 'மொத்த வசூலான தொகை' : 'Total Collected Balance'}
               </span>
               <h2 className="text-2xl font-black tracking-tight leading-none mt-1">
                 {formatIndianCurrency(totalPaidSum)}
@@ -148,17 +150,17 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
           ) : error ? (
             <div className="p-6 text-center">
               <p className="text-xs text-red-600 font-bold bg-red-50 border border-red-100 rounded-2xl p-4.5">
-                ⚠️ Failed to load completed bills list.
+                {t.language === 'ta' ? '⚠️ செலுத்தப்பட்ட பில்களை ஏற்றுவதில் தோல்வி.' : '⚠️ Failed to load completed bills list.'}
               </p>
             </div>
           ) : filteredBills.length === 0 ? (
             <EmptyState
               icon={History}
-              title={search ? 'No Match Found' : 'No Paid Bills'}
+              title={search ? (t.language === 'ta' ? 'பொருத்தம் எதுவும் இல்லை' : 'No Match Found') : (t.language === 'ta' ? 'செலுத்தப்பட்ட பில்கள் இல்லை' : 'No Paid Bills')}
               description={
                 search
-                  ? `No matching completed invoices were found for "${search}".`
-                  : `There are no completed bills registered for "${placeName}" yet.`
+                  ? (t.language === 'ta' ? `"${search}"-க்கு இணையான பில் எதுவும் இல்லை.` : `No matching completed invoices were found for "${search}".`)
+                  : (t.language === 'ta' ? `"${placeName}"-க்கு இன்னும் செலுத்தப்பட்ட பில்கள் எதுவும் இல்லை.` : `There are no completed bills registered for "${placeName}" yet.`)
               }
             />
           ) : (
@@ -180,7 +182,7 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
           <ExportPDFButton 
             placeName={placeName} 
             bills={filteredBills} 
-            label="Export Completed Bills PDF"
+            label={t.language === 'ta' ? 'செலுத்தப்பட்ட பில்கள் PDF ஏற்றுமதி' : 'Export Completed Bills PDF'}
           />
         )}
 
@@ -188,9 +190,9 @@ export default function CompletedBillsPage({ params }: CompletedBillsProps) {
         <ConfirmDialog
           isOpen={isDeleteOpen}
           onOpenChange={setIsDeleteOpen}
-          title="Delete Paid Record?"
-          description={`Are you sure you want to delete PAID bill #${selectedBill?.bill_number}? This cannot be undone.`}
-          confirmText="Delete Record"
+          title={t.language === 'ta' ? 'செலுத்தப்பட்ட பில் பதிவை நீக்கலாமா?' : 'Delete Paid Record?'}
+          description={t.language === 'ta' ? `செலுத்தப்பட்ட பில் #${selectedBill?.bill_number}-ஐ நீக்க விரும்புகிறீர்களா என்பதில் உறுதியாக இருக்கிறீர்களா? இதை மாற்ற முடியாது.` : `Are you sure you want to delete PAID bill #${selectedBill?.bill_number}? This cannot be undone.`}
+          confirmText={t.language === 'ta' ? 'பதிவை நீக்கு' : 'Delete Record'}
           onConfirm={handleDeleteCompletedBill}
           isLoading={isDeleting}
         />

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../ui/ToastProvider';
+import { LanguageProvider } from '../ui/LanguageProvider';
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   // Prevent QueryClient recreation across server renders
@@ -22,7 +23,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </ToastProvider>
     </QueryClientProvider>
   );

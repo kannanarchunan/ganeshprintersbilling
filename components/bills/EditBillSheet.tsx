@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Edit } from 'lucide-react';
 import Button from '../ui/Button';
 import { Bill } from '@/types';
+import { useLanguage } from '@/components/ui/LanguageProvider';
 
 interface EditBillSheetProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function EditBillSheet({
   const [notes, setNotes] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
+  const { t } = useLanguage();
 
   // Hydrate form states when input bill updates
   useEffect(() => {
@@ -52,12 +54,12 @@ export default function EditBillSheet({
     const parsedAmount = parseFloat(amount);
 
     if (!trimmedNum) {
-      setError('Bill number is required.');
+      setError(t.language === 'ta' ? 'பில் எண் தேவை.' : 'Bill number is required.');
       return;
     }
 
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
-      setError('Amount must be greater than 0.');
+      setError(t.language === 'ta' ? 'தயவுசெய்து 0 ஐ விட அதிகமான தொகையைக் குறிப்பிடவும்.' : 'Amount must be greater than 0.');
       return;
     }
 
@@ -70,7 +72,7 @@ export default function EditBillSheet({
       });
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to update bill record.');
+      setError(err.message || (t.language === 'ta' ? 'பில் திருத்துவதில் தோல்வி.' : 'Failed to update bill record.'));
     }
   };
 
@@ -93,8 +95,12 @@ export default function EditBillSheet({
               <Edit className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">Edit Invoice</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Modify logged bill details</p>
+              <h3 className="font-bold text-slate-800 text-sm">
+                {t.language === 'ta' ? 'பில் திருத்தவும்' : 'Edit Invoice'}
+              </h3>
+              <p className="text-[10px] text-slate-400 font-semibold">
+                {t.language === 'ta' ? 'பில் விவரங்களை மாற்றியமைக்கவும்' : 'Modify logged bill details'}
+              </p>
             </div>
           </div>
           <button 
@@ -112,9 +118,15 @@ export default function EditBillSheet({
             </p>
           )}
 
+          {t.language === 'ta' && (
+            <p className="text-[9px] text-amber-600 bg-amber-50 border border-amber-100 rounded-xl p-2 font-semibold">
+              ⚠️ பில் எண் மற்றும் விவரக்குறிப்புகளை ஆங்கிலத்தில் மட்டுமே உள்ளிடவும். பில் மற்றும் ரசீதுகள் ஆங்கிலத்தில் மட்டுமே அச்சிடப்படும்.
+            </p>
+          )}
+
           <div className="space-y-1">
             <label htmlFor="edit-bill-num" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Bill / Invoice Number
+              {t.language === 'ta' ? 'பில் / விலைப்பட்டியல் எண் (ஆங்கிலத்தில்)' : 'Bill / Invoice Number'}
             </label>
             <input
               id="edit-bill-num"
@@ -130,7 +142,7 @@ export default function EditBillSheet({
 
           <div className="space-y-1">
             <label htmlFor="edit-bill-amount" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Invoice Amount (₹)
+              {t.language === 'ta' ? 'பில் தொகை (₹)' : 'Invoice Amount (₹)'}
             </label>
             <input
               id="edit-bill-amount"
@@ -147,7 +159,7 @@ export default function EditBillSheet({
 
           <div className="space-y-1">
             <label htmlFor="edit-bill-due" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Due Date (Optional)
+              {t.language === 'ta' ? 'செலுத்த வேண்டிய தேதி (விருப்பத்திற்குரியது)' : 'Due Date (Optional)'}
             </label>
             <input
               id="edit-bill-due"
@@ -161,12 +173,12 @@ export default function EditBillSheet({
 
           <div className="space-y-1">
             <label htmlFor="edit-bill-notes" className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              Delivery Notes (Optional)
+              {t.language === 'ta' ? 'விவரக்குறிப்புகள் (விருப்பத்திற்குரியது - ஆங்கிலத்தில்)' : 'Delivery Notes (Optional)'}
             </label>
             <input
               id="edit-bill-notes"
               type="text"
-              placeholder="e.g. 5 boxes wall poster"
+              placeholder={t.language === 'ta' ? 'உதா: 5 boxes wall poster' : 'e.g. 5 boxes wall poster'}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               disabled={isLoading}
@@ -182,14 +194,14 @@ export default function EditBillSheet({
               disabled={isLoading}
               className="flex-1 rounded-xl text-xs h-10"
             >
-              Cancel
+              {t.language === 'ta' ? 'ரத்துசெய்' : 'Cancel'}
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading}
               className="flex-1 rounded-xl text-xs h-10"
             >
-              {isLoading ? 'Saving...' : 'Save Changes'}
+              {isLoading ? (t.language === 'ta' ? 'சேமிக்கப்படுகிறது...' : 'Saving...') : (t.language === 'ta' ? 'மாற்றங்களைச் சேமி' : 'Save Changes')}
             </Button>
           </div>
         </form>

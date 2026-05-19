@@ -1,8 +1,7 @@
-'use client';
-
 import React, { useState } from 'react';
 import { X, MapPin } from 'lucide-react';
 import Button from '../ui/Button';
+import { useLanguage } from '../ui/LanguageProvider';
 
 interface AddPlaceSheetProps {
   isOpen: boolean;
@@ -17,6 +16,7 @@ export default function AddPlaceSheet({
   onAdd,
   isLoading = false,
 }: AddPlaceSheetProps) {
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [error, setError] = useState('');
 
@@ -28,7 +28,7 @@ export default function AddPlaceSheet({
 
     const trimmedName = name.trim();
     if (trimmedName.length < 2) {
-      setError('Location name must be at least 2 characters.');
+      setError(t.language === 'ta' ? 'இடத்தின் பெயர் குறைந்தபட்சம் 2 எழுத்துக்கள் இருக்க வேண்டும்.' : 'Location name must be at least 2 characters.');
       return;
     }
 
@@ -37,7 +37,7 @@ export default function AddPlaceSheet({
       setName('');
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Failed to add place. Make sure name is unique.');
+      setError(err.message || (t.language === 'ta' ? 'இடத்தைச் சேர்ப்பதில் தோல்வி. பெயர் தனிப்பட்டதாக இருக்க வேண்டும்.' : 'Failed to add place. Make sure name is unique.'));
     }
   };
 
@@ -60,8 +60,8 @@ export default function AddPlaceSheet({
               <MapPin className="h-4.5 w-4.5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">Add Delivery Place</h3>
-              <p className="text-[10px] text-slate-400 font-semibold">Organize bills under locations</p>
+              <h3 className="font-bold text-slate-800 text-sm">{t.language === 'ta' ? 'புதிய டெலிவரி இடம்' : 'Add Delivery Place'}</h3>
+              <p className="text-[10px] text-slate-400 font-semibold">{t.language === 'ta' ? 'பில்களை இடங்களின் கீழ் ஒழுங்கமைக்கவும்' : 'Organize bills under locations'}</p>
             </div>
           </div>
           <button 
@@ -74,13 +74,13 @@ export default function AddPlaceSheet({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="place-name" className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-              Location / Place Name
+            <label htmlFor="place-name" className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
+              {t.locationName} <span className="text-[9px] text-slate-400 font-normal lowercase italic">({t.language === 'ta' ? 'ஆங்கிலத்தில் மட்டும் எழுதவும்' : 'English only'})</span>
             </label>
             <input
               id="place-name"
               type="text"
-              placeholder="e.g. Hyderabad Printers"
+              placeholder={t.language === 'ta' ? 'எ.கா. Madurai Printers' : 'e.g. Madurai Printers'}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isLoading}
@@ -99,14 +99,14 @@ export default function AddPlaceSheet({
               disabled={isLoading}
               className="flex-1 rounded-xl text-xs h-10"
             >
-              Cancel
+              {t.cancel}
             </Button>
             <Button 
               type="submit" 
               disabled={isLoading}
               className="flex-1 rounded-xl text-xs h-10"
             >
-              {isLoading ? 'Creating...' : 'Add Location'}
+              {isLoading ? (t.language === 'ta' ? 'சேர்க்கப்படுகிறது...' : 'Creating...') : t.addLocation}
             </Button>
           </div>
         </form>
