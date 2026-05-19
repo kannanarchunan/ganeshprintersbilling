@@ -74,10 +74,10 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
     doc.setFont('helvetica', 'bold');
     doc.text('TOTAL PENDING:', 130, 57);
     doc.setTextColor(194, 65, 12); // Amber-700
-    // Format Indian Rupees system with lakhs/crores commas
-    const formattedSum = new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    // Format Indian Rupees system with lakhs/crores commas, using Rs. prefix to prevent character map corruption
+    const formattedSum = 'Rs. ' + new Intl.NumberFormat('en-IN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(totalPendingSum);
     
     doc.text(formattedSum, 130, 62);
@@ -97,9 +97,9 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
           })
         : '-';
 
-      const formattedAmount = new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
+      const formattedAmount = 'Rs. ' + new Intl.NumberFormat('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       }).format(Number(bill.amount));
 
       return [
@@ -113,7 +113,7 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
     // Render Table using AutoTable
     autoTable(doc, {
       startY: 70,
-      head: [['Bill No.', 'Amount (₹)', 'Created Date', 'Due Date']],
+      head: [['Bill No.', 'Amount (Rs.)', 'Created Date', 'Due Date']],
       body: tableRows,
       headStyles: {
         fillColor: primaryColor,
