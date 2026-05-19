@@ -51,11 +51,30 @@ export const syncToSheets = async (event: SyncEvent): Promise<void> => {
 
       const sheets = getSheetsClient();
 
-      // Auto-ensure all required tabs exist with beautiful headers
+      // Auto-ensure all required tabs exist with beautiful headers (now including Place Name)
       await ensureSheetTabInitialized(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
-      await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
-      await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+      await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+      await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
       await ensureSheetTabInitialized(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
+
+      // Fetch the human-readable Place Name for bill sync events
+      let placeName = '';
+      if (event.bill) {
+        try {
+          const { getSupabaseServer } = require('@/lib/supabase/server');
+          const supabase = getSupabaseServer();
+          const { data: place } = await supabase
+            .from('places')
+            .select('name')
+            .eq('id', event.bill.place_id)
+            .single();
+          if (place) {
+            placeName = place.name;
+          }
+        } catch (e) {
+          console.warn('Could not fetch place name for sheet sync:', e);
+        }
+      }
 
       await runWithRetry(async () => {
         // 1. Process place actions
@@ -82,12 +101,12 @@ export const syncToSheets = async (event: SyncEvent): Promise<void> => {
         // 2. Process bill actions
         else if (event.type === 'bill_created' && event.bill) {
           const tab = event.bill.status === 'completed' ? 'Completed Bills' : 'Pending Bills';
-          await appendRow(sheets, sheetId, tab, formatBillRow(event.bill));
+          await appendRow(sheets, sheetId, tab, formatBillRow(event.bill, placeName));
         }
 
         else if (event.type === 'bill_updated' && event.bill) {
           // A bill can be updated in either Pending or Completed tabs
-          const rowValues = formatBillRow(event.bill);
+          const rowValues = formatBillRow(event.bill, placeName);
           const didUpdatePending = await updateRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id, rowValues);
           if (!didUpdatePending) {
             await updateRowInTab(sheets, sheetId, 'Completed Bills', event.bill.id, rowValues);
@@ -97,7 +116,7 @@ export const syncToSheets = async (event: SyncEvent): Promise<void> => {
         else if (event.type === 'bill_completed' && event.bill) {
           // Delete from Pending Bills, Append to Completed Bills
           await deleteRowInTab(sheets, sheetId, 'Pending Bills', event.bill.id);
-          await appendRow(sheets, sheetId, 'Completed Bills', formatBillRow(event.bill));
+          await appendRow(sheets, sheetId, 'Completed Bills', formatBillRow(event.bill, placeName));
         }
 
         else if (event.type === 'bill_deleted' && event.bill) {
@@ -119,10 +138,11 @@ export const syncToSheets = async (event: SyncEvent): Promise<void> => {
 };
 
 // Google Sheet helper functions
-const formatBillRow = (bill: Bill) => {
+const formatBillRow = (bill: Bill, placeName: string = '') => {
   return [
     bill.id,
     bill.place_id,
+    placeName, // Human-readable location name
     bill.bill_number,
     bill.amount.toString(),
     bill.status,
@@ -270,6 +290,18 @@ const clearSheetTab = async (sheets: any, spreadsheetId: string, range: string) 
 };
 
 /**
+ * Overwrite headers in a sheet tab
+ */
+const overwriteHeaders = async (sheets: any, spreadsheetId: string, range: string, headers: string[]) => {
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${range}!A1`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values: [headers] },
+  });
+};
+
+/**
  * Bulk append rows to a sheet tab
  */
 const bulkAppendRows = async (sheets: any, spreadsheetId: string, range: string, values: any[][]) => {
@@ -292,9 +324,15 @@ export const forceSyncAllData = async (places: Place[], bills: Bill[], logs: any
   
   // Ensure all tabs exist and are initialized with headers
   await ensureSheetTabInitialized(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
-  await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
-  await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+  await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+  await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
   await ensureSheetTabInitialized(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
+
+  // Overwrite headers to make sure the sheet layout is up-to-date
+  await overwriteHeaders(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
+  await overwriteHeaders(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+  await overwriteHeaders(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+  await overwriteHeaders(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
 
   // Clear existing rows (leaving headers in row 1)
   await clearSheetTab(sheets, sheetId, 'Places');
@@ -308,17 +346,18 @@ export const forceSyncAllData = async (places: Place[], bills: Bill[], logs: any
     await bulkAppendRows(sheets, sheetId, 'Places', values);
   }
 
-  // Bulk append bills
+  // Bulk append bills (including Place Name)
   const pendingBills = bills.filter(b => b.status === 'pending');
   const completedBills = bills.filter(b => b.status === 'completed');
+  const placeMap = new Map(places.map(p => [p.id, p.name]));
 
   if (pendingBills.length > 0) {
-    const values = pendingBills.map(formatBillRow);
+    const values = pendingBills.map(b => formatBillRow(b, placeMap.get(b.place_id) || ''));
     await bulkAppendRows(sheets, sheetId, 'Pending Bills', values);
   }
 
   if (completedBills.length > 0) {
-    const values = completedBills.map(formatBillRow);
+    const values = completedBills.map(b => formatBillRow(b, placeMap.get(b.place_id) || ''));
     await bulkAppendRows(sheets, sheetId, 'Completed Bills', values);
   }
 
