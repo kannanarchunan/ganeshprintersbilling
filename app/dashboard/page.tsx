@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { RefreshCw, MapPin, ClipboardList, Wallet, Sparkles, TrendingUp, History } from 'lucide-react';
+import { RefreshCw, MapPin, ClipboardList, Wallet, Sparkles, TrendingUp, History, CloudLightning } from 'lucide-react';
 import AuthGuard from '@/components/layout/AuthGuard';
 import MobileLayout from '@/components/layout/MobileLayout';
 import PageHeader from '@/components/layout/PageHeader';
@@ -17,6 +17,21 @@ export default function AdminDashboardPage() {
   const { toast } = useToast();
 
   const { dashboardData, isLoading, error, refetch } = useDashboard();
+  const [isSyncing, setIsSyncing] = React.useState(false);
+
+  const handleSyncSheets = async () => {
+    try {
+      setIsSyncing(true);
+      const res = await fetch('/api/sync/sheets', { method: 'POST' });
+      if (!res.ok) throw new Error('Google Sheets synchronization failed');
+      const data = await res.json();
+      toast(data.message || 'Sheets successfully synchronized!', 'success');
+    } catch (err: any) {
+      toast(err.message || 'Sync failed. Please verify credentials.', 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   const handleRefresh = async () => {
     try {
@@ -67,14 +82,24 @@ export default function AdminDashboardPage() {
           subtitle="Ganesh Printers Analytics"
           showLogout={true}
           rightAction={
-            <button
-              onClick={handleRefresh}
-              disabled={isLoading}
-              className="text-white/80 hover:text-white hover:bg-white/10 active:scale-90 p-2 rounded-full transition-all duration-100 disabled:opacity-50"
-              title="Refresh"
-            >
-              <RefreshCw className={`h-4.5 w-4.5 ${isLoading ? 'animate-spin' : ''}`} />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handleSyncSheets}
+                disabled={isSyncing}
+                className="text-white/80 hover:text-white hover:bg-white/10 active:scale-90 p-2 rounded-full transition-all duration-100 disabled:opacity-50"
+                title="Sync Google Sheets"
+              >
+                <CloudLightning className={`h-4.5 w-4.5 ${isSyncing ? 'animate-bounce text-amber-300' : ''}`} />
+              </button>
+              <button
+                onClick={handleRefresh}
+                disabled={isLoading}
+                className="text-white/80 hover:text-white hover:bg-white/10 active:scale-90 p-2 rounded-full transition-all duration-100 disabled:opacity-50"
+                title="Refresh"
+              >
+                <RefreshCw className={`h-4.5 w-4.5 ${isLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           }
         />
 
