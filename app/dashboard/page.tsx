@@ -23,8 +23,12 @@ export default function AdminDashboardPage() {
     try {
       setIsSyncing(true);
       const res = await fetch('/api/sync/sheets', { method: 'POST' });
-      if (!res.ok) throw new Error('Google Sheets synchronization failed');
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Google Sheets synchronization failed');
+      }
+      
       toast(data.message || 'Sheets successfully synchronized!', 'success');
     } catch (err: any) {
       toast(err.message || 'Sync failed. Please verify credentials.', 'error');
