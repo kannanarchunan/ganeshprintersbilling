@@ -120,19 +120,23 @@ export function generatePendingBillsPDF(placeName: string, bills: Bill[]) {
         textColor: [255, 255, 255],
         fontSize: 10,
         fontStyle: 'bold',
+        halign: 'left',
       },
       bodyStyles: {
         fontSize: 9,
         textColor: textColor,
         halign: 'left',
       },
-      columnStyles: {
-        1: { halign: 'right' }, // Align both header and cells to the right for perfect financial legibility
-      },
       alternateRowStyles: {
         fillColor: [249, 250, 251], // Gray-50
       },
       margin: { left: 14, right: 14 },
+      didParseCell: (data) => {
+        // Force right-alignment for both head and body cells of the Amount column (index 1)
+        if (data.column.index === 1) {
+          data.cell.styles.halign = 'right';
+        }
+      },
     });
 
     // Footer spacing & rendering
