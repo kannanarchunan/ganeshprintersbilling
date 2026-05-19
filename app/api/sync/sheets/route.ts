@@ -1,25 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServer } from '@/lib/supabase/server';
-import { syncToSheets } from '@/lib/sheets/sync';
+import { forceSyncAllData } from '@/lib/sheets/sync';
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = getSupabaseServer();
 
-    // Fetch active databases to verify connection
-    const { count, error } = await supabase
+    // 1. Fetch all places
+    const { data: places, error: placesError } = await supabase
       .from('places')
-      .select('*', { count: 'exact', head: true });
+      .select('*')
+      .order('name', { ascending: true });
 
-    if (error) throw error;
+    if (placesError) throw placesError;
+
+    // 2. Fetch all bills
+    const { data: bills, error: billsError } = await supabase
+      .from('bills')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (billsError) throw billsError;
+
+    // 3. Fetch all activity logs
+    const { data: logs, error: logsError } = await supabase
+      .from('activity_logs')
+      .select('*')
+      .order('timestamp', { ascending: false });
+
+    if (logsError) throw logsError;
+
+    // 4. Force sync everything into Google Sheets
+    await forceSyncAllData(places || [], bills || [], logs || []);
 
     return NextResponse.json({
-      message: `Sheets connection verified successfully. Active database holds ${count} locations.`,
+      message: `Full database successfully synchronized to Google Sheet! Synced ${places?.length || 0} places, ${bills?.length || 0} bills, and ${logs?.length || 0} activity logs.`,
     });
   } catch (err: any) {
-    console.error('API Sheets connection verification failure:', err);
+    console.error('API Sheets connection and sync failure:', err);
     return NextResponse.json(
-      { error: err.message || 'Verification failed.' },
+      { error: err.message || 'Synchronization failed.' },
       { status: 500 }
     );
   }

@@ -50,6 +50,13 @@ export const syncToSheets = async (event: SyncEvent): Promise<void> => {
       }
 
       const sheets = getSheetsClient();
+
+      // Auto-ensure all required tabs exist with beautiful headers
+      await ensureSheetTabInitialized(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
+      await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+      await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+      await ensureSheetTabInitialized(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
+
       await runWithRetry(async () => {
         // 1. Process place actions
         if (event.type === 'place_created' && event.place) {
@@ -216,4 +223,119 @@ const logActivity = async (sheets: any, spreadsheetId: string, event: SyncEvent)
     timestamp,
   ];
   await appendRow(sheets, spreadsheetId, 'Activity Logs', logValues);
+};
+
+/**
+ * Robustly ensures a sheet tab exists in Google Sheets, and if newly created, initializes headers.
+ */
+export const ensureSheetTabInitialized = async (sheets: any, spreadsheetId: string, tabName: string, headers: string[]) => {
+  const metadata = await sheets.spreadsheets.get({ spreadsheetId });
+  const sheetExists = metadata.data.sheets.some((s: any) => s.properties.title === tabName);
+  
+  if (!sheetExists) {
+    // 1. Add the sheet
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests: [{
+          addSheet: {
+            properties: { title: tabName }
+          }
+        }]
+      }
+    });
+    
+    // 2. Append the headers
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: `${tabName}!A1`,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: { values: [headers] },
+    });
+  }
+};
+
+/**
+ * Clear data rows in a sheet tab (leaving the headers in row 1 intact)
+ */
+const clearSheetTab = async (sheets: any, spreadsheetId: string, range: string) => {
+  try {
+    await sheets.spreadsheets.values.clear({
+      spreadsheetId,
+      range: `${range}!A2:Z10000`,
+    });
+  } catch (error) {
+    console.warn(`Clearing tab ${range} failed or was already clean:`, error);
+  }
+};
+
+/**
+ * Bulk append rows to a sheet tab
+ */
+const bulkAppendRows = async (sheets: any, spreadsheetId: string, range: string, values: any[][]) => {
+  await sheets.spreadsheets.values.append({
+    spreadsheetId,
+    range: `${range}!A2`,
+    valueInputOption: 'USER_ENTERED',
+    requestBody: { values },
+  });
+};
+
+/**
+ * Wipes the Google Sheets and does a full rewrite from current database.
+ */
+export const forceSyncAllData = async (places: Place[], bills: Bill[], logs: any[]): Promise<void> => {
+  const sheetId = process.env.GOOGLE_SHEET_ID;
+  if (!sheetId) throw new Error('GOOGLE_SHEET_ID is not defined.');
+  
+  const sheets = getSheetsClient();
+  
+  // Ensure all tabs exist and are initialized with headers
+  await ensureSheetTabInitialized(sheets, sheetId, 'Places', ['Place ID', 'Name', 'Created At']);
+  await ensureSheetTabInitialized(sheets, sheetId, 'Pending Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+  await ensureSheetTabInitialized(sheets, sheetId, 'Completed Bills', ['Bill ID', 'Place ID', 'Bill Number', 'Amount', 'Status', 'Created At', 'Completed At', 'Due Date', 'Notes']);
+  await ensureSheetTabInitialized(sheets, sheetId, 'Activity Logs', ['Log ID', 'Action Type', 'Bill ID', 'Place ID', 'Place Name', 'Bill Number', 'Amount', 'Status', 'Triggered By', 'Timestamp']);
+
+  // Clear existing rows (leaving headers in row 1)
+  await clearSheetTab(sheets, sheetId, 'Places');
+  await clearSheetTab(sheets, sheetId, 'Pending Bills');
+  await clearSheetTab(sheets, sheetId, 'Completed Bills');
+  await clearSheetTab(sheets, sheetId, 'Activity Logs');
+
+  // Bulk append places
+  if (places.length > 0) {
+    const values = places.map(p => [p.id, p.name, p.created_at]);
+    await bulkAppendRows(sheets, sheetId, 'Places', values);
+  }
+
+  // Bulk append bills
+  const pendingBills = bills.filter(b => b.status === 'pending');
+  const completedBills = bills.filter(b => b.status === 'completed');
+
+  if (pendingBills.length > 0) {
+    const values = pendingBills.map(formatBillRow);
+    await bulkAppendRows(sheets, sheetId, 'Pending Bills', values);
+  }
+
+  if (completedBills.length > 0) {
+    const values = completedBills.map(formatBillRow);
+    await bulkAppendRows(sheets, sheetId, 'Completed Bills', values);
+  }
+
+  // Bulk append activity logs
+  if (logs.length > 0) {
+    const values = logs.map(l => [
+      l.id,
+      l.action_type,
+      l.bill_id || '',
+      l.place_id || l.bill_place_id || '',
+      l.place_name || '',
+      l.bill_number || '',
+      l.amount?.toString() || '',
+      l.status || '',
+      'System App User',
+      l.timestamp,
+    ]);
+    await bulkAppendRows(sheets, sheetId, 'Activity Logs', values);
+  }
 };
